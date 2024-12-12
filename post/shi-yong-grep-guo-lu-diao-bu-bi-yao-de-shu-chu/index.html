@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>使用grep过滤掉不必要的输出 | YangQing 的博客</title>
+<meta name="description" content="温故而知新">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1733991701227">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/papercss@1.6.1/dist/paper.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+<script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
+
+  </head>
+  <body>
+  
+    <nav class="navbar border fixed split-nav">
+  <div class="nav-brand">
+    <h3><a href="https://blog.aoip.top">YangQing 的博客</a></h3>
+  </div>
+  <div class="collapsible">
+    <input id="collapsible1" type="checkbox" name="collapsible1">
+    <button>
+      <label for="collapsible1">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </label>
+    </button>
+    <div class="collapsible-body">
+      <ul class="inline">
+        
+          <li>
+            
+              <a href="/" class="menu">
+                首页
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/archives" class="menu">
+                归档
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/tags" class="menu">
+                标签
+              </a>
+            
+          </li>
+        
+          <li>
+            
+              <a href="/post/about" class="menu">
+                关于
+              </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div id="top" class="row site">
+      <div class="sm-12 md-8 col">
+        <div class="paper">
+          <article class="article">
+            <h1>使用grep过滤掉不必要的输出</h1>
+            <p class="article-meta">
+              2024-12-11
+              
+                <a href="https://blog.aoip.top/tag/xS2S0diJwg/" class="badge secondary">
+                  Linux
+                </a>
+              
+                <a href="https://blog.aoip.top/tag/6jJKsqO2fNb/" class="badge warning">
+                  命令行
+                </a>
+              
+                <a href="https://blog.aoip.top/tag/hx4OY-QqcB1/" class="badge secondary">
+                  Note
+                </a>
+              
+            </p>
+            
+            <div class="post-content" v-pre>
+              <p>一般来说使用grep都是用来过滤需要的内容的，但偶尔也会碰到过滤不想要内容的情况，比如排查日志的时候。</p>
+<p>这时候就可以使用<code>-v</code>选项来排除指定的字符串。</p>
+<pre><code class="language-bash">your_command | grep -v &quot;sys\|ping&quot;
+</code></pre>
+<p>这里， <code>\|</code> 是一个逻辑或操作符，表示匹配&quot;sys&quot;或&quot;ping&quot;。 <code>-v</code> 选项则是 invert-match Strand toggles, 匹配不包含指定字符串的行为。</p>
+<p>如果你使用支持 <code>-E</code> 选项的 <code>grep</code>版本，则可以避免对 <code>\|</code> 符号进行转义。</p>
+<pre><code class="language-bash">your_command | grep -vE &quot;sys|ping&quot;
+</code></pre>
+<h3 id="忽略大小写">忽略大小写</h3>
+<p>可以使用 <code>-i</code> 选项来忽略大小写。</p>
+<pre><code class="language-bash">your_command | grep -vi &quot;sys\|ping&quot;
+</code></pre>
+<p>或</p>
+<pre><code class="language-bash">your_command | grep -viE &quot;sys|ping&quot;
+</code></pre>
+<p>这里， <code>-i</code> 选项告诉 <code>grep</code> 忽略大小写，其他选项和前面的例子相同。</p>
+<figure data-type="image" tabindex="1"><img src="https://blog.aoip.top/post-images/1733991699315.jpg" alt="" loading="lazy"></figure>
+
+            </div>
+          </article>
+        </div>
+        <div class="paper" data-aos="fade-in">
+          
+            <div class="next-post">
+              <div class="next">
+                下一篇
+              </div>
+              <a href="https://blog.aoip.top/post/hello-gridea/">
+                <h3 class="post-title">
+                  Hello Gridea
+                </h3>
+              </a>
+            </div>
+          
+        </div>
+        
+      </div>
+
+      <div class="sm-12 md-4 col sidebar">
+  <div class="paper info-container">
+    <img src="https://blog.aoip.top/images/avatar.png?v=1733991701227" class="no-responsive avatar">
+    <div class="text-muted">温故而知新</div>
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      最新文章
+    </div>
+    <div class="row">
+      <ul>
+        
+          
+            <li>
+              <a href="https://blog.aoip.top/post/shi-yong-grep-guo-lu-diao-bu-bi-yao-de-shu-chu/">使用grep过滤掉不必要的输出</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://blog.aoip.top/post/about/">关于</a>
+            </li>
+          
+        
+          
+            <li>
+              <a href="https://blog.aoip.top/post/hello-gridea/">Hello Gridea</a>
+            </li>
+          
+        
+      </ul>
+    </div>
+  </div>
+  <div class="paper">
+    <div class="sidebar-title">
+      标签列表
+    </div>
+    <div class="row">
+      
+        <a href="https://blog.aoip.top/tag/xS2S0diJwg/" class="badge success">
+          Linux
+        </a>
+      
+        <a href="https://blog.aoip.top/tag/6jJKsqO2fNb/" class="badge secondary">
+          命令行
+        </a>
+      
+        <a href="https://blog.aoip.top/tag/hx4OY-QqcB1/" class="badge success">
+          Note
+        </a>
+      
+        <a href="https://blog.aoip.top/tag/_Rv5bVbxds/" class="badge secondary">
+          Gridea
+        </a>
+      
+    </div>
+  </div>
+  <div class="paper">
+    Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+  </div>
+</div>
+
+
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+
+<script type="application/javascript">
+
+AOS.init();
+
+hljs.initHighlightingOnLoad()
+
+</script>
+
+
+
+
+  </body>
+</html>
