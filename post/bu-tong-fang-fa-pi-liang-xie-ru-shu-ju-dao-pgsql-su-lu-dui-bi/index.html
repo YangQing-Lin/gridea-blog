@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>不同方法批量写入数据到pgsql速率对比 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="使用executemany进行批量插入
+def batch_insert_phone_numbers(cursor, phone_numbers):
+    if not phone_numbers:
+        return
+    ..." />
+    <meta name="keywords" content="Python,PostgreSQL,数据库" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">不同方法批量写入数据到pgsql速率对比</h2>
+            <div class="post-date">2024-12-25</div>
+            
+            <div class="post-content" v-pre>
+              <h2 id="使用executemany进行批量插入">使用<code>executemany</code>进行批量插入</h2>
+<pre><code class="language-python">def batch_insert_phone_numbers(cursor, phone_numbers):
+    if not phone_numbers:
+        return
+    try:
+        # 批量插入语句
+        sql = &quot;INSERT INTO phone (number) VALUES (%s)&quot;
+        
+        # 使用executemany进行批量插入
+        cursor.executemany(sql, [(num,) for num in phone_numbers])
+        
+        # 提交事务
+        conn.commit()
+        print(f&quot;成功批量插入 {len(phone_numbers)} 条手机号&quot;)
+    except Exception as e:
+        # 如果出错回滚
+        conn.rollback()
+        print(f&quot;批量插入失败: {e}&quot;)
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202412251733582.png" alt="image-20241225173348514" loading="lazy"></figure>
+<h2 id="拼接sql语句字符串进行批量插入">拼接sql语句字符串进行批量插入</h2>
+<pre><code class="language-python">def batch_insert_phone_numbers(cursor, phone_numbers):
+    if not phone_numbers:
+        return
+    try:
+        # 构建 VALUES 部分
+        values_list = ','.join([f&quot;({num})&quot; for num in phone_numbers])
+        
+        # 完整的 SQL 语句
+        sql = f&quot;INSERT INTO phone (number) VALUES {values_list}&quot;
+        
+        # 执行插入
+        cursor.execute(sql)
+        
+        # 提交事务
+        conn.commit()
+        print(f&quot;成功批量插入 {len(phone_numbers)} 条手机号&quot;)
+    except Exception as e:
+        # 如果出错回滚
+        conn.rollback()
+        print(f&quot;批量插入失败: {e}&quot;)
+</code></pre>
+<figure data-type="image" tabindex="2"><img src="https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202412251735599.png" alt="image-20241225173547556" loading="lazy"></figure>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/K_pPhWx2Gy/" class="tag">
+                    Python
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/j83V3GCNTt/" class="tag">
+                    PostgreSQL
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/SYAkLeuSVDd/" class="tag">
+                    数据库
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/postgres-shu-ju-ku-an-zhuang-postgis-kuo-zhan-docker-huan-jing-xia/">
+                  <h3 class="post-title">
+                    Postgres数据库安装PostGIS扩展（Docker环境下）
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>自定义APIRoute实现大文件上传优先校验时效Token | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="自定义APIRoute实现大文件上传优先校验时效Token
+业务介绍
+公司中的文件上传服务是我编写和维护的，今天同事在上传大文件的时候发现Nginx报错，超过允许的最大容量。
+查看Nginx配置文件发现 client_max_body_si..." />
+    <meta name="keywords" content="FastAPI,Request,APIRoute,Python" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">自定义APIRoute实现大文件上传优先校验时效Token</h2>
+            <div class="post-date">2025-01-02</div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="自定义apiroute实现大文件上传优先校验时效token">自定义APIRoute实现大文件上传优先校验时效Token</h1>
+<h2 id="业务介绍">业务介绍</h2>
+<p>公司中的文件上传服务是我编写和维护的，今天同事在上传大文件的时候发现Nginx报错，超过允许的最大容量。</p>
+<p>查看Nginx配置文件发现 <code>client_max_body_size</code>参数被设置为了 <code>500M</code>，于是修改成 <code>2G</code>。</p>
+<p>过了一会同事发消息说上传接口报错了，返回信息如下：</p>
+<pre><code class="language-json">{
+    &quot;code&quot;: 20206,
+    &quot;message&quot;: &quot;The File upload timeout&quot;,
+    &quot;response&quot;: {}
+}
+</code></pre>
+<p>出现这个报错是因为上传的时候使用了已经失效的Token，但是程序上传都是当场根据时间戳生成的Token，文件服务中设置的Token失效时间是5分钟，按理说不可能会超时的。</p>
+<p>在确认了同事服务器的时区以及生成的时间戳都正常之后我想到了另一种可能：<strong>文件服务接口接收大文件的时间超过了5分钟。</strong></p>
+<h2 id="问题分析">问题分析</h2>
+<p>通过查阅文件服务接口代码发现，Token信息是存放在Headers里面的，<strong>但是用于校验Token的时间戳以及随机码是存放在Body里面的。</strong></p>
+<p>Body同时也是存放文件数据的地方。</p>
+<p>而且进行Token校验的地方是业务逻辑函数上面的装饰器。</p>
+<p>这就造成接口想要验证Token是否有效，<strong>就需要等待Body的数据全部上传完成才行。</strong></p>
+<p><strong>路由代码：</strong></p>
+<pre><code class="language-python">    @router.post(&quot;/file/add_device_file&quot;, summary=&quot;添加设备文件接口&quot;)
+    async def add_device_file(
+        self,
+        request: Request,
+        form_data = Form(..., description=&quot;文件对象&quot;),  # 下面的数据都是从body获取的form-data格式的数据
+        time: int = Form(..., description=&quot;时间戳&quot;),
+        num: int = Form(..., description=&quot;随机数&quot;),
+        app_key: str = Form(..., description=&quot;平台信息&quot;),
+    ) -&gt; UploadFileResponse:
+        &quot;&quot;&quot;文件添加接口(设备文件上传)&quot;&quot;&quot;
+        data = {
+            &quot;request&quot;: request,
+            &quot;file&quot;: form_data.file,
+            &quot;name&quot;: form_data.filename,
+            &quot;size&quot;: form_data.size,
+            &quot;time&quot;: time,
+            &quot;num&quot;: num,
+            &quot;app_key&quot;: app_key,
+        }
+        return await add_device_file_ctrl(data)
+</code></pre>
+<p><strong>业务逻辑代码：</strong></p>
+<pre><code class="language-python">@check_token
+async def add_device_file_ctrl(data):
+    &quot;&quot;&quot;
+    上传设备文件
+    &quot;&quot;&quot;
+    if not data.get(&quot;name&quot;):
+        raise ResponseError(
+            code=ResponseCode.parameter_not_illegal,
+            message=f&quot;The file not illegal&quot;,
+        )
+    ...
+</code></pre>
+<p><strong>装饰器代码：</strong></p>
+<pre><code class="language-python">def check_token(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        # 测试环境关闭token验证
+        # if nacos_config.minio_config.get(&quot;IS_DEBUG&quot;, 0):
+        #     return await func(*args, **kwargs)
+
+        data = args[0]
+        if &quot;token&quot; not in data[&quot;request&quot;].headers:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=f&quot;The token  not illegal&quot;,
+            )
+
+        token = data[&quot;request&quot;].headers[&quot;token&quot;]
+
+        # 将传入的时间戳、数字、密钥使用md加密后对比token
+        result_str = f&quot;{data['time']}{settings.token_key}{data['num']}&quot;
+        target_str = md5_encrypt(result_str)
+
+        if target_str != token:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=f&quot;The token  not illegal&quot;,
+            )
+
+        # 使用传入的时间戳和当前时间比较
+        flag = has_exceeded_time(data[&quot;time&quot;], settings.timeout_time)
+        if flag:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=f&quot;The File upload timeout&quot;,
+            )
+
+        return await func(*args, **kwargs)
+
+    return wrapper
+</code></pre>
+<p>从代码中可以看到，装饰器分别从 <code>headers</code>和 <code>body</code>中获取了不同的数据来完成Token校验。</p>
+<p>之前上传的文件都不会超过200MB，顶天了500MB，5分钟的超时时间完全足够，但是由于最近设备端逻辑修改，上传的文件数据量猛然增加，单文件大小达到了800MB，如果上行带宽不足的话，就很容易超过5分钟的限制，于是这个隐藏的问题就被暴露出来了。</p>
+<h2 id="方法1使用依赖注入的方式添加验证逻辑失败">方法1：使用依赖注入的方式添加验证逻辑（失败）</h2>
+<p>FastAPI 的依赖注入机制可以在路由处理函数执行之前运行，因此可以利用它来优先校验 <code>headers</code> 中的 token，而不需要等待 <code>body</code> 完全上传。</p>
+<h3 id="实现步骤">实现步骤</h3>
+<ol>
+<li>定义一个依赖函数，用于校验 <code>headers</code> 中的 token。</li>
+<li>将该依赖函数注入到路由中。</li>
+</ol>
+<h3 id="示例代码">示例代码</h3>
+<pre><code class="language-python">from fastapi import FastAPI, Header, HTTPException, Depends
+from fastapi import UploadFile
+
+app = FastAPI()
+
+# 模拟 token 校验逻辑
+def verify_token(authorization: str = Header(...)):
+    if authorization != &quot;valid-token&quot;:
+        raise HTTPException(status_code=401, detail=&quot;Invalid token&quot;)
+    return True
+
+@app.post(&quot;/upload/&quot;)
+async def upload_file(
+    token_valid: bool = Depends(verify_token),  # 优先校验 token
+    file: UploadFile = None,  # 文件上传
+):
+    if not file:
+        raise HTTPException(status_code=400, detail=&quot;No file uploaded&quot;)
+    return {&quot;filename&quot;: file.filename, &quot;token_valid&quot;: token_valid}
+</code></pre>
+<h3 id="说明">说明</h3>
+<ul>
+<li><code>verify_token</code> 是一个依赖函数，它会优先从 <code>headers</code> 中提取 <code>Authorization</code> 并校验。</li>
+<li><code>Depends(verify_token)</code> 确保在文件上传之前先执行 token 校验。</li>
+<li>如果 token 校验失败，FastAPI 会直接返回 401 错误，而不会等待文件上传完成。</li>
+</ul>
+<h2 id="方法2在路由之前添加装饰器失败">方法2：在路由之前添加装饰器（失败）</h2>
+<h3 id="新的装饰器代码">新的装饰器代码：</h3>
+<pre><code class="language-python">from functools import wraps
+from fastapi import Request
+from your_error_module import ResponseError, ResponseCode  # 替换为实际的错误处理模块
+from your_utils_module import md5_encrypt, has_exceeded_time  # 替换为实际的工具函数模块
+
+def check_token_new_2(func):
+    @wraps(func)
+    async def wrapper(request: Request, *args, **kwargs):
+        # 测试环境关闭token验证
+        # if nacos_config.minio_config.get(&quot;IS_DEBUG&quot;, 0):
+        #     return await func(request, *args, **kwargs)
+
+        # 从 headers 中获取 token、time 和 num
+        if &quot;token&quot; not in request.headers:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=&quot;The token not illegal&quot;,
+            )
+
+        token = request.headers[&quot;token&quot;]
+        time = request.headers.get(&quot;time&quot;)
+        num = request.headers.get(&quot;num&quot;)
+
+        if not time or not num:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=&quot;Missing required headers: time or num&quot;,
+            )
+
+        # 将传入的时间戳、数字、密钥使用 md5 加密后对比 token
+        result_str = f&quot;{time}{settings.token_key}{num}&quot;
+        target_str = md5_encrypt(result_str)
+
+        if target_str != token:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=&quot;The token not illegal&quot;,
+            )
+
+        # 使用传入的时间戳和当前时间比较
+        flag = has_exceeded_time(int(time), settings.timeout_time)
+        if flag:
+            raise ResponseError(
+                code=ResponseCode.parameter_not_illegal,
+                message=&quot;The File upload timeout&quot;,
+            )
+
+        # 继续执行原始函数
+        return await func(request, *args, **kwargs)
+
+    return wrapper
+</code></pre>
+<h3 id="关键修改点">关键修改点</h3>
+<ol>
+<li><strong>直接使用 <code>Request</code> 对象</strong>：
+<ul>
+<li>装饰器的 <code>wrapper</code> 函数中，直接接收 <code>request: Request</code> 参数，而不是从 <code>args</code> 中提取 <code>request</code>。</li>
+<li>这样可以绕过 <code>body</code> 的内容，直接从 <code>headers</code> 中获取所需的数据。</li>
+</ul>
+</li>
+<li><strong>从 <code>headers</code> 中提取数据</strong>：
+<ul>
+<li>使用 <code>request.headers</code> 获取 <code>token</code>、<code>time</code> 和 <code>num</code>。</li>
+<li>如果 <code>headers</code> 中缺少必要字段，直接抛出错误。</li>
+</ul>
+</li>
+<li><strong>移除对 <code>body</code> 的依赖</strong>：
+<ul>
+<li>不再从 <code>args</code> 或 <code>kwargs</code> 中提取 <code>body</code> 相关的内容，确保装饰器仅处理 <code>headers</code>。</li>
+</ul>
+</li>
+</ol>
+<h3 id="使用示例">使用示例</h3>
+<p>将装饰器应用到 FastAPI 的路由中：</p>
+<pre><code class="language-python">from fastapi import FastAPI, Request, UploadFile, File
+from your_decorator_module import check_token_new_2  # 替换为实际的装饰器模块
+
+app = FastAPI()
+
+@app.post(&quot;/file/add_large_device_file&quot;)
+@check_token_new_2
+async def add_large_device_file(request: Request, file: UploadFile = File(...)):
+    # 文件上传逻辑
+    return {&quot;filename&quot;: file.filename}
+</code></pre>
+<h2 id="方法3自定义-apiroute成功">方法3：自定义 <code>APIRoute</code>（成功！）</h2>
+<p>如果你只想对某些路由生效，也可以通过自定义 <code>APIRoute</code> 来控制流程。</p>
+<h3 id="示例">示例</h3>
+<pre><code class="language-python">from fastapi import FastAPI, Request, HTTPException
+from fastapi.routing import APIRoute
+
+class TokenValidatedAPIRoute(APIRoute):
+    def get_route_handler(self):
+        original_route_handler = super().get_route_handler()
+
+        async def custom_route_handler(request: Request):
+            # 在这里检查 headers
+            token = request.headers.get(&quot;Authorization&quot;)
+            if not token or token != &quot;EXPECTED_TOKEN&quot;:
+                raise HTTPException(status_code=401, detail=&quot;Invalid Token&quot;)
+            # 校验通过，执行原本的处理逻辑
+            return await original_route_handler(request)
+
+        return custom_route_handler
+
+app = FastAPI()
+
+@app.post(&quot;/upload&quot;, route_class=TokenValidatedAPIRoute)
+async def upload_file(file: bytes = ...):
+    return {&quot;message&quot;: &quot;Upload succeeded!&quot;}
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202501022009685.png" alt="image-20250102200958924" loading="lazy"></figure>
+<h3 id="优点">优点</h3>
+<ul>
+<li>只对指定路由应用该校验逻辑；</li>
+<li>同样可以在进入路由实际处理函数之前检查 headers；</li>
+<li>可以封装不同的 <code>APIRoute</code> 实例，对不同需求的路由应用不同的逻辑。</li>
+</ul>
+<h3 id="注意点">注意点</h3>
+<ul>
+<li>这种方式更“底层”，对不熟悉 Starlette/FastAPI 路由机制的同学可能不够直观。</li>
+</ul>
+<blockquote>
+<p>需要注意的是，在当前这个文件服务里面路由接口使用的是提前定义好的 <code>APIRoute</code>对象，也就是 <code>router</code>变量，所以需要像下面这样修改代码：</p>
+<p><strong>1. 在 <code>file_view.py</code>中定义新的 <code>router</code>变量：</strong></p>
+<pre><code class="language-python">from fastapi import APIRouter
+from minio_server.api.file.file_tools import TokenValidatedAPIRoute
+
+new_router = APIRouter(route_class=TokenValidatedAPIRoute)
+</code></pre>
+<p><strong>2. 在“文件操作视图类”开头添加 <code>cvb</code>注册，并替换新接口为 <code>new_router</code>变量：</strong></p>
+<pre><code class="language-python">@cbv(new_router)
+class FileView:
+    &quot;&quot;&quot;文件操作视图类&quot;&quot;&quot;
+  
+    @new_router.post(&quot;/file/add_large_device_file&quot;, summary=&quot;设备大文件上传接口&quot;)
+    async def add_large_device_file(
+        self,
+        form_data: UploadFile = File(..., description=&quot;文件对象&quot;),
+        app_key: str = Header(..., description=&quot;平台信息&quot;),
+    ) -&gt; UploadFileResponse:
+        &quot;&quot;&quot;文件添加接口(设备文件上传)&quot;&quot;&quot;
+        # print(f&quot;token valid: {token_valid}&quot;)
+        data = {
+            &quot;file&quot;: form_data.file,
+            &quot;name&quot;: form_data.filename,
+            &quot;size&quot;: form_data.size,
+            &quot;app_key&quot;: app_key,
+        }
+        return await add_large_device_file_ctrl(data)
+</code></pre>
+<p><strong>3. 在整个项目初始化的时候注册 <code>new_router</code>：</strong></p>
+<pre><code class="language-python">from minio_server.api.file.file_view import new_router
+
+app = FastAPI(lifespan=lifespan, docs_url=docs_url, redoc_url=None)
+
+app.include_router(new_router)
+</code></pre>
+</blockquote>
+<h2 id="方法4全局或局部中间件middleware业务其他接口需要保持原样这里不推荐">方法4：全局或局部中间件(Middleware)（业务其他接口需要保持原样，这里不推荐）</h2>
+<p>中间件可以在进入具体路由之前对 <code>request.headers</code> 进行检查，如果校验失败，可以在中间件阶段直接返回响应，避免后续再去读取大文件。</p>
+<h3 id="示例-2">示例</h3>
+<pre><code class="language-python">from fastapi import FastAPI, Request, Response, HTTPException
+
+app = FastAPI()
+
+@app.middleware(&quot;http&quot;)
+async def check_token_middleware(request: Request, call_next):
+    # 从请求头中获取 token
+    token = request.headers.get(&quot;Authorization&quot;)
+    if not token or token != &quot;EXPECTED_TOKEN&quot;:
+        # 如果校验失败，直接返回 401 或 403 等
+        raise HTTPException(status_code=401, detail=&quot;Invalid Token&quot;)
+  
+    # 校验通过，继续处理请求
+    response = await call_next(request)
+    return response
+
+@app.post(&quot;/upload&quot;)
+async def upload_file(file: bytes = ...):
+    # 到这里说明已经通过了中间件校验
+    return {&quot;message&quot;: &quot;Upload succeeded!&quot;}
+</code></pre>
+<h3 id="优点-2">优点</h3>
+<ol>
+<li>可以在读取请求体（body）之前就完成对请求头的校验；</li>
+<li>无需修改每个路由，适合全局通用校验；</li>
+<li>逻辑清晰，易维护。</li>
+</ol>
+<h3 id="注意点-2">注意点</h3>
+<ul>
+<li>如果你的校验参数复杂，或者不同路由需要不同的校验逻辑，可以在局部中间件或其他层面做细分。</li>
+</ul>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/e1TTqrSNZ-/" class="tag">
+                    FastAPI
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/HQyAZhQr-mc/" class="tag">
+                    Request
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/wdPZ5MuT58X/" class="tag">
+                    APIRoute
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/K_pPhWx2Gy/" class="tag">
+                    Python
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/ji-yi-ci-docker-rong-qi-yi-chang-zhan-yong-gen-mu-lu-kong-jian-de-wen-ti/">
+                  <h3 class="post-title">
+                    记一次docker容器异常占用根目录空间的问题
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>load_dotenv 使用笔记 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="load_dotenv 是一个 Python 库，用于从 .env 文件中加载环境变量。它通常用于管理应用程序的配置，避免将敏感信息（如 API 密钥、数据库密码等）硬编码在代码中。
+安装
+首先，你需要安装 python-dotenv 包：..." />
+    <meta name="keywords" content="环境变量,Python" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">load_dotenv 使用笔记</h2>
+            <div class="post-date">2025-01-07</div>
+            
+            <div class="post-content" v-pre>
+              <p><code>load_dotenv</code> 是一个 Python 库，用于从 <code>.env</code> 文件中加载环境变量。它通常用于管理应用程序的配置，避免将敏感信息（如 API 密钥、数据库密码等）硬编码在代码中。</p>
+<h2 id="安装">安装</h2>
+<p>首先，你需要安装 <code>python-dotenv</code> 包：</p>
+<pre><code class="language-bash">pip install python-dotenv
+</code></pre>
+<h2 id="基本用法">基本用法</h2>
+<ol>
+<li>
+<p><strong>创建 <code>.env</code> 文件</strong></p>
+<p>在项目的根目录下创建一个 <code>.env</code> 文件，并在其中定义环境变量。例如：</p>
+<pre><code class="language-plaintext">DATABASE_URL=postgres://user:password@localhost:5432/mydatabase
+SECRET_KEY=mysecretkey
+DEBUG=True
+</code></pre>
+</li>
+<li>
+<p><strong>加载 <code>.env</code> 文件</strong></p>
+<p>在你的 Python 代码中，使用 <code>load_dotenv</code> 函数来加载 <code>.env</code> 文件中的环境变量：</p>
+<pre><code class="language-python">from dotenv import load_dotenv
+import os
+
+# 加载 .env 文件中的环境变量
+load_dotenv()
+
+# 访问环境变量
+database_url = os.getenv('DATABASE_URL')
+secret_key = os.getenv('SECRET_KEY')
+debug = os.getenv('DEBUG')
+
+print(f&quot;Database URL: {database_url}&quot;)
+print(f&quot;Secret Key: {secret_key}&quot;)
+print(f&quot;Debug Mode: {debug}&quot;)
+</code></pre>
+</li>
+<li>
+<p><strong>运行代码</strong></p>
+<p>当你运行上述代码时，<code>load_dotenv</code> 会从 <code>.env</code> 文件中加载环境变量，并通过 <code>os.getenv</code> 访问这些变量。</p>
+</li>
+</ol>
+<h2 id="高级用法">高级用法</h2>
+<ol>
+<li>
+<p><strong>指定 <code>.env</code> 文件路径</strong></p>
+<p>如果你的 <code>.env</code> 文件不在项目的根目录下，或者你想加载其他名称的文件，可以通过 <code>dotenv_path</code> 参数指定路径：</p>
+<pre><code class="language-python">load_dotenv(dotenv_path='/path/to/.env')
+</code></pre>
+</li>
+<li>
+<p><strong>覆盖现有环境变量</strong></p>
+<p>默认情况下，<code>load_dotenv</code> 不会覆盖已经存在的环境变量。如果你希望 <code>.env</code> 文件中的变量覆盖现有变量，可以设置 <code>override=True</code>：</p>
+<pre><code class="language-python">load_dotenv(override=True)
+</code></pre>
+</li>
+<li>
+<p><strong>使用 <code>find_dotenv</code> 自动查找 <code>.env</code> 文件</strong></p>
+<p><code>find_dotenv</code> 函数可以自动查找 <code>.env</code> 文件的位置：</p>
+<pre><code class="language-python">from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+</code></pre>
+<blockquote>
+<p><code>load_dotenv()</code> 和 <code>load_dotenv(find_dotenv())</code> 的主要区别在于如何查找和加载 <code>.env</code> 文件。以下是两者的详细对比：</p>
+<hr>
+<ol>
+<li>
+<p><strong><code>load_dotenv()</code></strong></p>
+<ul>
+<li><strong>默认行为</strong>：<code>load_dotenv()</code> 会尝试在当前工作目录（即运行 Python 脚本的目录）中查找 <code>.env</code> 文件并加载它。</li>
+<li><strong>优点</strong>：简单直接，适合 <code>.env</code> 文件位于项目根目录且运行脚本时工作目录正确的情况。</li>
+<li><strong>缺点</strong>：如果 <code>.env</code> 文件不在当前工作目录中，或者脚本是从其他目录运行的，<code>load_dotenv()</code> 可能无法找到 <code>.env</code> 文件。</li>
+</ul>
+<p><strong>示例代码</strong>：</p>
+<pre><code class="language-python">from dotenv import load_dotenv
+import os
+
+load_dotenv()  # 默认从当前工作目录加载 .env 文件
+
+print(os.getenv('MY_VAR'))
+</code></pre>
+</li>
+</ol>
+<hr>
+<ol start="2">
+<li>
+<p><strong><code>load_dotenv(find_dotenv())</code></strong></p>
+<ul>
+<li><strong><code>find_dotenv()</code> 的作用</strong>：<code>find_dotenv()</code> 会递归地向上搜索目录树，查找 <code>.env</code> 文件的位置。它会从当前目录开始，逐级向上查找，直到找到 <code>.env</code> 文件或到达文件系统的根目录。</li>
+<li><strong>优点</strong>：
+<ul>
+<li>更灵活：即使脚本是从子目录运行的，<code>find_dotenv()</code> 也能找到 <code>.env</code> 文件。</li>
+<li>更健壮：适合项目结构复杂或脚本从不同目录运行的情况。</li>
+</ul>
+</li>
+<li><strong>缺点</strong>：稍微复杂一些，需要额外调用 <code>find_dotenv()</code>。</li>
+</ul>
+<p><strong>示例代码</strong>：</p>
+<pre><code class="language-python">from dotenv import load_dotenv, find_dotenv
+import os
+
+load_dotenv(find_dotenv())  # 自动查找 .env 文件并加载
+
+print(os.getenv('MY_VAR'))
+</code></pre>
+</li>
+</ol>
+<hr>
+<ol start="3">
+<li><strong>总结</strong></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>load_dotenv()</code></td>
+<td>简单项目，<code>.env</code> 文件位于项目根目录且脚本从根目录运行</td>
+<td>简单直接</td>
+<td>依赖当前工作目录</td>
+</tr>
+<tr>
+<td><code>load_dotenv(find_dotenv())</code></td>
+<td>复杂项目，<code>.env</code> 文件可能位于上级目录，或脚本从子目录运行</td>
+<td>更健壮，自动查找 <code>.env</code> 文件</td>
+<td>稍微复杂</td>
+</tr>
+</tbody>
+</table>
+<p>推荐在大多数情况下使用 <code>load_dotenv(find_dotenv())</code>，因为它更健壮且适应性更强。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>在 Flask 中使用 <code>load_dotenv</code></strong></p>
+<p>在 Flask 应用中，通常会在应用启动时加载 <code>.env</code> 文件：</p>
+<pre><code class="language-python">from flask import Flask
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
+@app.route('/')
+def hello():
+    return &quot;Hello, World!&quot;
+
+if __name__ == '__main__':
+    app.run(debug=os.getenv('DEBUG') == 'True')
+</code></pre>
+</li>
+</ol>
+<h2 id="样例代码">样例代码</h2>
+<p>以下是一个完整的样例代码，展示了如何使用 <code>load_dotenv</code> 加载环境变量并在 Flask 应用中使用它们：</p>
+<pre><code class="language-python">from flask import Flask
+from dotenv import load_dotenv
+import os
+
+# 加载 .env 文件中的环境变量
+load_dotenv()
+
+app = Flask(__name__)
+
+# 从环境变量中获取配置
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['DEBUG'] = os.getenv('DEBUG') == 'True'
+
+@app.route('/')
+def hello():
+    return &quot;Hello, World!&quot;
+
+if __name__ == '__main__':
+    app.run(debug=app.config['DEBUG'])
+</code></pre>
+<h2 id="总结">总结</h2>
+<ul>
+<li><code>load_dotenv</code> 是一个非常有用的工具，可以帮助你管理应用程序的配置。</li>
+<li>通过 <code>.env</code> 文件，你可以将敏感信息与代码分离，提高安全性。</li>
+<li>你可以通过 <code>dotenv_path</code> 参数指定 <code>.env</code> 文件的路径，或者使用 <code>find_dotenv</code> 自动查找文件。</li>
+<li>在 Flask 等框架中，<code>load_dotenv</code> 可以帮助你轻松加载配置。</li>
+</ul>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/cEYjFWr28R/" class="tag">
+                    环境变量
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/K_pPhWx2Gy/" class="tag">
+                    Python
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/chong-xie-apiroute-shi-xian-da-wen-jian-shang-chuan-you-xian-xiao-yan-shi-xiao-token/">
+                  <h3 class="post-title">
+                    自定义APIRoute实现大文件上传优先校验时效Token
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>配置frpc自动启动 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="起因
+今天在使用VMWare启动Ubuntu虚拟机的时候发现虚拟机没有网络，排查了发现虚拟机的网络适配器使用的是“桥接模式”，查了资料说使用“NAT模式”比较适配大多数情况，修改配置后果然虚拟机有网络了。
+但是发现了一个问题，我配置在虚拟机..." />
+    <meta name="keywords" content="网络,systemd,Ubuntu,VMWare,虚拟机,Linux" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">配置frpc自动启动</h2>
+            <div class="post-date">2025-01-22</div>
+            
+            <div class="post-content" v-pre>
+              <h2 id="起因">起因</h2>
+<p>今天在使用VMWare启动Ubuntu虚拟机的时候发现虚拟机没有网络，排查了发现虚拟机的网络适配器使用的是“桥接模式”，查了资料说使用“NAT模式”比较适配大多数情况，修改配置后果然虚拟机有网络了。</p>
+<p>但是发现了一个问题，我配置在虚拟机中的frpc服务并没有在网络恢复后自动重启恢复，于是查阅解决方法，发现<code>systemd</code>本身就有重启相关的配置。</p>
+<p>原先配置文件中这一块的配置是：<code>Restart=on-failure</code></p>
+<p>这意味着 <code>systemd</code> 只会在服务<strong>异常退出</strong>时才会重启服务。如果服务因为网络不可用而无法启动，<code>systemd</code> 可能不会将其视为“失败”，因此不会自动重启。</p>
+<p>所以解决方案就是将其修改为<code>Restart=always</code>，这样无论服务因何原因退出（包括网络不可用），<code>systemd</code> 都会尝试重启服务。</p>
+<p>并且可以设置一个等待时间，避免频繁尝试占用系统资源。</p>
+<h2 id="具体解决方案">具体解决方案</h2>
+<p><code>systemd</code> 提供了强大的服务管理功能，可以通过配置服务的 <code>Restart</code> 和 <code>RestartSec</code> 选项来实现自动重启。</p>
+<ol>
+<li>
+<p>编辑 <code>frpc</code> 的 <code>systemd</code> 服务文件：</p>
+<pre><code class="language-bash">sudo nano /etc/systemd/system/frpc.service
+</code></pre>
+</li>
+<li>
+<p>在 <code>[Service]</code> 部分添加以下内容：</p>
+<pre><code class="language-ini">[Service]
+Restart=always
+RestartSec=10
+</code></pre>
+<ul>
+<li><code>Restart=always</code>：表示无论服务因何原因退出，都会自动重启。</li>
+<li><code>RestartSec=10</code>：表示每次重启前等待 10 秒。</li>
+</ul>
+</li>
+<li>
+<p>保存并退出，然后重新加载 <code>systemd</code> 配置：</p>
+<pre><code class="language-bash">sudo systemctl daemon-reload
+</code></pre>
+</li>
+<li>
+<p>重启 <code>frpc</code> 服务以应用更改：</p>
+<pre><code class="language-bash">sudo systemctl restart frpc
+</code></pre>
+</li>
+</ol>
+<p>这样，<code>frpc</code> 服务会在网络恢复后自动重启。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/FjsoJrOwDg/" class="tag">
+                    网络
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/7acgAtrofIr/" class="tag">
+                    systemd
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/B__DuWveQoj/" class="tag">
+                    Ubuntu
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/PAWFZ_zmy2/" class="tag">
+                    VMWare
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/6afIK5JfrUN/" class="tag">
+                    虚拟机
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/xS2S0diJwg/" class="tag">
+                    Linux
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/vmware-gei-ubuntu-kuo-rong-shu-ju-pan/">
+                  <h3 class="post-title">
+                    VMWare 给 Ubuntu 扩容数据盘
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

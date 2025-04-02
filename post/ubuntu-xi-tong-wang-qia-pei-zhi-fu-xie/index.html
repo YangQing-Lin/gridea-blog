@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Ubuntu系统网卡配置覆写 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="需求分析
+今天需要在一台远程服务器上添加一个新的内网ip地址配置，用于向更多的网段提供服务。
+但由于服务器不在身边，如果配置错误导致远程连接断开，那就需要打车去场地物理修改，会非常麻烦。
+所以考虑编写一个覆写脚本，用于定时将当前可用的配置定..." />
+    <meta name="keywords" content="定时任务,crontab,网络,Ubuntu,Linux" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Ubuntu系统网卡配置覆写</h2>
+            <div class="post-date">2025-03-19</div>
+            
+              <div class="feature-container" style="background-image: url('https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202503191138529.png')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <h3 id="需求分析">需求分析</h3>
+<p>今天需要在一台远程服务器上添加一个新的内网ip地址配置，用于向更多的网段提供服务。</p>
+<p>但由于服务器不在身边，如果配置错误导致远程连接断开，那就需要打车去场地物理修改，会非常麻烦。</p>
+<p>所以考虑编写一个覆写脚本，用于定时将当前可用的配置定时覆写到网卡配置中，并重启网络服务。</p>
+<h3 id="代码实现">代码实现</h3>
+<p>首先将当前可用的网卡配置备份到<code>/etc/netplan/01-netcfg.yaml.bak250319</code>文件中</p>
+<p>然后编写下面的shell脚本<code>overwrite_net_config.sh</code>：</p>
+<pre><code class="language-bash">#!/bin/bash
+
+# 覆盖网络配置文件
+sudo cp -f /etc/netplan/01-netcfg.yaml.bak250319 /etc/netplan/01-netcfg.yaml
+
+# 应用新的网络配置
+sudo netplan apply
+
+# 单独启动指定网卡（不停止直接启动）
+sudo ip link set enxac0033aa9633 up
+sudo ip link set eno1 up
+
+echo &quot;[$(date '+%Y-%m-%d %T')] 网络配置已更新并成功启动指定网卡&quot;
+</code></pre>
+<p>手动执行测试功能是否正常</p>
+<h3 id="代码部署">代码部署</h3>
+<p>使用crontab服务配置定时任务</p>
+<pre><code class="language-bash">sudo crontab -e
+</code></pre>
+<p>填写脚本执行信息，设置每30分钟覆写一次</p>
+<pre><code class="language-bash"># 覆写网络配置文件
+*/30 * * * * /bin/bash /etc/netplan/overwrite_net_config.sh &gt;&gt; /home/wintoo/log/netplan-cron/overwrite_net_config.log 2&gt;&amp;1
+</code></pre>
+<p>一开始可以把间隔设置的短一点，测试一下配置文件是否被成功覆写，日志是否正常打印。</p>
+<p>测试完成之后就可以安心的修改网络配置了。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/15opk_qU5T/" class="tag">
+                    定时任务
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/tVrN4BEiCYQ/" class="tag">
+                    crontab
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/FjsoJrOwDg/" class="tag">
+                    网络
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/B__DuWveQoj/" class="tag">
+                    Ubuntu
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/xS2S0diJwg/" class="tag">
+                    Linux
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/zheng-xiang-dai-li-fan-xiang-dai-li-de-yi-tong-dian/">
+                  <h3 class="post-title">
+                    正向代理、反向代理的异同点
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

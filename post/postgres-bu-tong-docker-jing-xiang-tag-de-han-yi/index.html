@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Postgres不同Docker镜像Tag的含义 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="今天需要本地启动一个Postgres测试数据库服务，变了操作简单，于是就直接在Docker Desktop上直接搜索镜像来安装。
+但是在选择Tag的时候发现除了版本号，还有一些额外的信息看不懂。
+
+查阅资料后将其记录在此。
+
+操作系统基础镜..." />
+    <meta name="keywords" content="Docker,PostgreSQL,数据库,Linux" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Postgres不同Docker镜像Tag的含义</h2>
+            <div class="post-date">2024-12-25</div>
+            
+            <div class="post-content" v-pre>
+              <p>今天需要本地启动一个Postgres测试数据库服务，变了操作简单，于是就直接在Docker Desktop上直接搜索镜像来安装。</p>
+<p>但是在选择Tag的时候发现除了版本号，还有一些额外的信息看不懂。</p>
+<figure data-type="image" tabindex="1"><img src="https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202412251413884.png" alt="" loading="lazy"></figure>
+<p>查阅资料后将其记录在此。</p>
+<ol>
+<li><strong>操作系统基础镜像</strong></li>
+</ol>
+<ul>
+<li><code>bullseye</code>: 基于 Debian 11</li>
+<li><code>bookworm</code>: 基于 Debian 12</li>
+<li><code>alpine</code>: 基于 Alpine Linux</li>
+</ul>
+<ol start="2">
+<li><strong>各版本特点对比</strong>：</li>
+</ol>
+<p><strong>Debian 系列</strong> (bullseye/bookworm)：</p>
+<ul>
+<li>优点：
+<ul>
+<li>系统稳定性好</li>
+<li>包管理完善</li>
+<li>调试工具齐全</li>
+<li>兼容性好</li>
+</ul>
+</li>
+<li>缺点：
+<ul>
+<li>镜像体积较大</li>
+<li>资源占用相对较多</li>
+</ul>
+</li>
+</ul>
+<p><strong>Alpine 系列</strong>：</p>
+<ul>
+<li>优点：
+<ul>
+<li>镜像体积小（约 100MB 左右）</li>
+<li>资源占用少</li>
+<li>启动速度快</li>
+</ul>
+</li>
+<li>缺点：
+<ul>
+<li>使用 musl libc 而不是 glibc</li>
+<li>可能存在一些兼容性问题</li>
+<li>调试工具相对较少</li>
+</ul>
+</li>
+</ul>
+<ol start="3">
+<li><strong>选择建议</strong>：</li>
+</ol>
+<p>生产环境：</p>
+<pre><code class="language-bash"># 推荐使用 Debian 基础镜像
+docker pull postgres:15-bullseye
+</code></pre>
+<p>开发/测试环境：</p>
+<pre><code class="language-bash"># 可以考虑使用 Alpine 版本
+docker pull postgres:15-alpine
+</code></pre>
+<ol start="4">
+<li><strong>版本命名示例</strong>：</li>
+</ol>
+<pre><code>postgres:15.4-bullseye    # PostgreSQL 15.4 + Debian 11
+postgres:15.4-bookworm    # PostgreSQL 15.4 + Debian 12
+postgres:15.4-alpine3.18  # PostgreSQL 15.4 + Alpine 3.18
+</code></pre>
+<ol start="5">
+<li><strong>实际使用建议</strong>：</li>
+</ol>
+<ul>
+<li>如果对系统资源要求不是特别敏感，建议使用 Debian 版本（bullseye/bookworm）</li>
+<li>如果特别注重容器大小和资源占用，可以选择 Alpine 版本</li>
+<li>生产环境建议使用稳定性更好的 Debian 版本</li>
+</ul>
+<p>记住：选择时要考虑：</p>
+<ul>
+<li>系统稳定性需求</li>
+<li>资源限制情况</li>
+<li>是否需要额外的调试工具</li>
+<li>团队的运维经验</li>
+</ul>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/EhCw5ufsyU/" class="tag">
+                    Docker
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/j83V3GCNTt/" class="tag">
+                    PostgreSQL
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/SYAkLeuSVDd/" class="tag">
+                    数据库
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/xS2S0diJwg/" class="tag">
+                    Linux
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/shi-yong-grep-guo-lu-diao-bu-bi-yao-de-shu-chu/">
+                  <h3 class="post-title">
+                    使用grep过滤掉不必要的输出
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

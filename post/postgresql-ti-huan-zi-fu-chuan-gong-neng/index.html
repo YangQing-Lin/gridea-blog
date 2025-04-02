@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>PostgreSQL 替换字符串功能 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="PostgreSQL 替换字符串功能
+本文档介绍了如何在 PostgreSQL 中使用 SQL 语句批量替换字符串，包括替换 JSON 字段中的字符串和替换普通字段中的字符串。
+
+1. 替换 JSON 字段中的字符串
+功能描述
+该 SQL ..." />
+    <meta name="keywords" content="PostgreSQL,数据库" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">PostgreSQL 替换字符串功能</h2>
+            <div class="post-date">2025-02-19</div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="postgresql-替换字符串功能">PostgreSQL 替换字符串功能</h1>
+<p>本文档介绍了如何在 PostgreSQL 中使用 SQL 语句批量替换字符串，包括替换 JSON 字段中的字符串和替换普通字段中的字符串。</p>
+<hr>
+<h2 id="1-替换-json-字段中的字符串">1. 替换 JSON 字段中的字符串</h2>
+<h3 id="功能描述">功能描述</h3>
+<p>该 SQL 语句用于批量替换 <code>ticket</code> 表中 <code>repair_pic</code> 字段（JSON 类型）中的图片地址。</p>
+<h3 id="sql-语句">SQL 语句</h3>
+<pre><code class="language-sql">DO $$
+DECLARE
+    affected_rows INTEGER;
+    iteration_count INTEGER := 1;
+BEGIN
+    LOOP
+        WITH cte AS (
+            SELECT uid
+            FROM ticket
+            WHERE repair_pic::text LIKE '%img.test.domain.cn/com/v2%'
+            LIMIT 1000
+        )
+        UPDATE ticket t
+        SET repair_pic = replace(t.repair_pic::text, 'img.test.domain.cn/com/v2', 'cdn.test.domain.com/image/i/imgs')::json
+        FROM cte
+        WHERE t.uid = cte.uid;
+
+        GET DIAGNOSTICS affected_rows = ROW_COUNT;
+        RAISE NOTICE '第 % 次更新，本次更新 % 行', iteration_count, affected_rows;
+        EXIT WHEN affected_rows = 0;
+
+        iteration_count := iteration_count + 1;
+    END LOOP;
+END $$;
+</code></pre>
+<h3 id="关键点">关键点</h3>
+<ol>
+<li><strong>循环更新</strong>：
+<ul>
+<li>每次更新最多 1000 行，直到没有需要更新的行为止。</li>
+</ul>
+</li>
+<li><strong>替换逻辑</strong>：
+<ul>
+<li>将 <code>repair_pic</code> 字段中的 <code>img.test.domain.cn/com/v2</code> 替换为 <code>cdn.test.domain.com/image/i/imgs</code>。</li>
+</ul>
+</li>
+<li><strong>日志输出</strong>：
+<ul>
+<li>使用 <code>RAISE NOTICE</code> 输出每次更新的行数。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="2-替换普通字段中的字符串">2. 替换普通字段中的字符串</h2>
+<h3 id="功能描述-2">功能描述</h3>
+<p>该 SQL 语句用于批量替换 <code>ticket</code> 表中 <code>cover</code> 字段（字符串类型）中的图片地址。</p>
+<h3 id="sql-语句-2">SQL 语句</h3>
+<pre><code class="language-sql">DO $$
+DECLARE
+    affected_rows INTEGER;
+BEGIN
+    LOOP
+        WITH cte AS (
+            SELECT uid
+            FROM ticket
+            WHERE cover LIKE 'https://cdn.test.domain.com/image/i/imgs/thum/%'
+            LIMIT 5000
+        )
+        UPDATE ticket t
+        SET cover = replace(cover, 'https://cdn.test.domain.com/image/i/imgs/thum/', 'https://cdn.test.domain.com/image/i/imgs/')
+        FROM cte
+        WHERE t.uid = cte.uid;
+
+        GET DIAGNOSTICS affected_rows = ROW_COUNT;
+        RAISE NOTICE '本次更新 % 行', affected_rows;
+        EXIT WHEN affected_rows = 0;
+    END LOOP;
+END $$;
+</code></pre>
+<h3 id="关键点-2">关键点</h3>
+<ol>
+<li><strong>循环更新</strong>：
+<ul>
+<li>每次更新最多 5000 行，直到没有需要更新的行为止。</li>
+</ul>
+</li>
+<li><strong>替换逻辑</strong>：
+<ul>
+<li>将 <code>cover</code> 字段中的 <code>https://cdn.test.domain.com/image/i/imgs/thum/</code> 替换为 <code>https://cdn.test.domain.com/image/i/imgs/</code>。</li>
+</ul>
+</li>
+<li><strong>日志输出</strong>：
+<ul>
+<li>使用 <code>RAISE NOTICE</code> 输出每次更新的行数。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="3-总结">3. 总结</h2>
+<table>
+<thead>
+<tr>
+<th><strong>功能</strong></th>
+<th><strong>字段类型</strong></th>
+<th><strong>替换逻辑</strong></th>
+<th><strong>更新方式</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>替换 JSON 字段中的字符串</td>
+<td>JSON</td>
+<td><code>img.test.domain.cn/com/v2</code> → <code>cdn.test.domain.com/image/i/imgs</code></td>
+<td>每次最多更新 1000 行</td>
+</tr>
+<tr>
+<td>替换普通字段中的字符串</td>
+<td>字符串</td>
+<td><code>https://cdn.test.domain.com/image/i/imgs/thum/</code> → <code>https://cdn.test.domain.com/image/i/imgs/</code></td>
+<td>每次最多更新 5000 行</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="4-注意事项">4. 注意事项</h2>
+<ol>
+<li><strong>性能优化</strong>：
+<ul>
+<li>通过 <code>LIMIT</code> 限制每次更新的行数，避免一次性更新过多数据导致性能问题。</li>
+</ul>
+</li>
+<li><strong>日志监控</strong>：
+<ul>
+<li>使用 <code>RAISE NOTICE</code> 输出更新日志，便于监控更新进度。</li>
+</ul>
+</li>
+<li><strong>字段类型</strong>：
+<ul>
+<li>替换 JSON 字段时，需要先将字段转换为字符串，替换后再转换回 JSON。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<p>希望这份笔记对你有帮助！如果有其他问题，欢迎随时提问。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/j83V3GCNTt/" class="tag">
+                    PostgreSQL
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/SYAkLeuSVDd/" class="tag">
+                    数据库
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/python-zhong-min-han-shu-de-key-can-shu-yong-fa/">
+                  <h3 class="post-title">
+                    Python 中 min 函数的 key 参数用法
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

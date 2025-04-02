@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Python 中 min 函数的 key 参数用法 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="1. min 函数简介
+min 函数用于返回可迭代对象中的最小值。它可以接受一个可选的 key 参数，用于指定比较的标准。
+2. key 参数的作用
+
+key 参数是一个函数，用于从每个元素中提取用于比较的值。
+如果不提供 key 参数，m..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Python 中 min 函数的 key 参数用法</h2>
+            <div class="post-date">2025-02-05</div>
+            
+            <div class="post-content" v-pre>
+              <h4 id="1-min-函数简介">1. <code>min</code> 函数简介</h4>
+<p><code>min</code> 函数用于返回可迭代对象中的最小值。它可以接受一个可选的 <code>key</code> 参数，用于指定比较的标准。</p>
+<h4 id="2-key-参数的作用">2. <code>key</code> 参数的作用</h4>
+<ul>
+<li><code>key</code> 参数是一个函数，用于从每个元素中提取用于比较的值。</li>
+<li>如果不提供 <code>key</code> 参数，<code>min</code> 函数将直接比较元素本身。</li>
+</ul>
+<h4 id="3-在字典中的应用">3. 在字典中的应用</h4>
+<p>当我们处理字典时，<code>min</code> 函数可以用于获取最小的键或值。</p>
+<h5 id="示例-1比较字典的值">示例 1：比较字典的值</h5>
+<p>如果我们想找到字典中值最小的键，可以使用 <code>dict.get</code> 作为 <code>key</code> 函数：</p>
+<pre><code class="language-python">street_dict = {'roads_name': 10, 'first_name': 5, 'second_name': 7}
+
+# 找到值最小的键
+min_key = min(street_dict, key=street_dict.get)
+
+# 找到对应的值
+min_value = street_dict[min_key]
+
+print(&quot;值最小的键是:&quot;, min_key)
+print(&quot;对应的值是:&quot;, min_value)
+</code></pre>
+<p>在这个示例中：</p>
+<ul>
+<li><code>min_key</code> 将存储值最小的键（<code>first_name</code>）。</li>
+<li><code>min_value</code> 将存储该键对应的值（<code>5</code>）。</li>
+</ul>
+<h5 id="示例-2比较字典的键">示例 2：比较字典的键</h5>
+<p>如果我们想找到字典中最小的键，可以直接使用 <code>min</code> 函数：</p>
+<pre><code class="language-python"># 找到最小的键
+min_key = min(street_dict)
+
+# 找到对应的值
+min_value = street_dict[min_key]
+
+print(&quot;最小的键是:&quot;, min_key)
+print(&quot;对应的值是:&quot;, min_value)
+</code></pre>
+<p>在这个示例中：</p>
+<ul>
+<li><code>min_key</code> 将存储字典中最小的键。</li>
+<li><code>min_value</code> 将存储该键对应的值。</li>
+</ul>
+<h4 id="4-其他注意事项">4. 其他注意事项</h4>
+<ul>
+<li><code>key</code> 函数可以是任何可调用对象（如函数、lambda 表达式等）。</li>
+<li>如果可迭代对象为空，<code>min</code> 函数会引发 <code>ValueError</code>。</li>
+<li><code>min</code> 函数可以与其他数据结构（如列表、元组等）结合使用，<code>key</code> 参数的用法相同。</li>
+</ul>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/zi-dong/">
+                  <h3 class="post-title">
+                    配置frpc自动启动
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

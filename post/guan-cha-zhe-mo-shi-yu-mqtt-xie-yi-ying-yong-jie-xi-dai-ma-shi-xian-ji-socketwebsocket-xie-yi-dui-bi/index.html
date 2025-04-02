@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>观察者模式与 MQTT 协议应用解析：代码实现及 Socket、WebSocket 协议对比 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="观察者模式与 MQTT 协议应用解析：代码实现及 Socket、WebSocket 协议对比
+观察者模式是一种行为设计模式，用于定义对象间的一对多依赖关系，使得当一个对象状态发生改变时，所有依赖它的对象都会自动收到通知并更新。其核心组件包括..." />
+    <meta name="keywords" content="MQTT,Python" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">观察者模式与 MQTT 协议应用解析：代码实现及 Socket、WebSocket 协议对比</h2>
+            <div class="post-date">2025-03-19</div>
+            
+              <div class="feature-container" style="background-image: url('https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202503191151511.png')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="观察者模式与-mqtt-协议应用解析代码实现及-socket-websocket-协议对比">观察者模式与 MQTT 协议应用解析：代码实现及 Socket、WebSocket 协议对比</h1>
+<p>观察者模式是一种行为设计模式，用于定义对象间的一对多依赖关系，使得当一个对象状态发生改变时，所有依赖它的对象都会自动收到通知并更新。其核心组件包括：</p>
+<ul>
+<li><strong>主题（Subject）</strong>：维护观察者列表并提供注册、注销和通知方法。</li>
+<li><strong>观察者（Observer）</strong>：定义更新接口，供主题通知状态变化。</li>
+</ul>
+<p>MQTT协议是一种轻量级的发布/订阅消息传输协议，专为低带宽、高延迟或不稳定网络环境设计，常用于物联网场景。核心特性包括：</p>
+<ul>
+<li>基于TCP/IP，支持QoS（0/1/2三种消息可靠性级别）。</li>
+<li>主题层级化（如<code>test/topic</code>），支持通配符<code>+</code>和<code>#</code>。</li>
+<li>低资源消耗，适合嵌入式设备。</li>
+</ul>
+<hr>
+<h3 id="代码示例">代码示例</h3>
+<h4 id="非阻塞模式客户端同时发布和订阅">非阻塞模式客户端（同时发布和订阅）</h4>
+<pre><code class="language-python"># client.py
+# pip install paho-mqtt -i https://mirrors.aliyun.com/pypi/simple
+import paho.mqtt.client as mqtt
+import time
+
+def on_message(client, userdata, msg):
+    print(f&quot;主题: {msg.topic}, 消息: {msg.payload.decode()}&quot;)
+
+client = mqtt.Client()
+client.on_connect = lambda client, userdata, flags, rc: print(&quot;已连接&quot; if rc == 0 else f&quot;连接失败，返回码：{rc}&quot;)
+client.on_message = on_message
+
+client.connect(&quot;localhost&quot;, 1883, 60)
+client.subscribe(&quot;test/topic&quot;)
+
+client.loop_start()  # 非阻塞模式
+try:
+    while True:
+        client.publish(&quot;test/topic&quot;, &quot;Hello from MQTT client!&quot;)
+        print(&quot;消息已发送&quot;)
+        time.sleep(1)
+except KeyboardInterrupt:
+    print(&quot;程序终止&quot;)
+client.loop_stop()
+</code></pre>
+<h4 id="阻塞模式客户端仅发布一次后持续接收">阻塞模式客户端（仅发布一次后持续接收）</h4>
+<pre><code class="language-python"># client_block.py
+import paho.mqtt.client as mqtt
+import time
+
+def on_message(client, userdata, msg):
+    print(f&quot;主题: {msg.topic}, 消息: {msg.payload.decode()}&quot;)
+
+client = mqtt.Client()
+client.on_connect = lambda client, userdata, flags, rc: print(&quot;已连接&quot; if rc == 0 else f&quot;连接失败，返回码：{rc}&quot;)
+client.on_message = on_message
+
+client.connect(&quot;localhost&quot;, 1883, 60)
+client.subscribe(&quot;test/topic&quot;)
+client.publish(&quot;test/topic&quot;, &quot;Hello from MQTT client!&quot;)
+
+client.loop_forever()  # 阻塞模式
+</code></pre>
+<h4 id="仅订阅客户端">仅订阅客户端</h4>
+<pre><code class="language-python"># client_subscribe.py
+# pip install paho-mqtt -i https://mirrors.aliyun.com/pypi/simple
+import paho.mqtt.client as mqtt
+import time
+
+def on_message(client, userdata, msg):
+    print(f&quot;主题: {msg.topic}, 消息: {msg.payload.decode()}&quot;)
+
+client = mqtt.Client()
+client.on_message = on_message
+
+client.connect(&quot;localhost&quot;, 1883, 60)
+client.subscribe(&quot;test/topic&quot;)
+
+client.loop_forever()  # 阻塞模式
+</code></pre>
+<figure data-type="image" tabindex="1"><img src="https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202503191151511.png" alt="" loading="lazy"></figure>
+<hr>
+<h3 id="socket与websocket简介">Socket与WebSocket简介</h3>
+<ol>
+<li>
+<p><strong>Socket</strong>：</p>
+<ul>
+<li>基于TCP/IP协议的基础通信机制，提供点对点、双向字节流传输。</li>
+<li>需自行处理连接状态和数据格式，常用于自定义协议（如游戏服务器）。</li>
+</ul>
+</li>
+<li>
+<p><strong>WebSocket</strong>：</p>
+<ul>
+<li>基于HTTP协议升级的全双工通信协议，支持浏览器与服务器实时交互。</li>
+<li>自动维护连接状态，适用于实时应用（如在线聊天、股票行情）。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="协议对比表格">协议对比表格</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Socket</th>
+<th>WebSocket</th>
+<th>MQTT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>协议层次</strong></td>
+<td>传输层（TCP/UDP）</td>
+<td>应用层（基于HTTP）</td>
+<td>应用层（基于TCP）</td>
+</tr>
+<tr>
+<td><strong>连接方式</strong></td>
+<td>点对点</td>
+<td>全双工长连接</td>
+<td>发布/订阅模型</td>
+</tr>
+<tr>
+<td><strong>通信模型</strong></td>
+<td>双向字节流</td>
+<td>消息帧</td>
+<td>主题消息广播</td>
+</tr>
+<tr>
+<td><strong>数据格式</strong></td>
+<td>自定义二进制或文本</td>
+<td>文本或二进制消息</td>
+<td>二进制（轻量级封装）</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>自定义协议、低延迟</td>
+<td>浏览器实时通信</td>
+<td>物联网、弱网络环境</td>
+</tr>
+</tbody>
+</table>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/MiEWak48Sk/" class="tag">
+                    MQTT
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/K_pPhWx2Gy/" class="tag">
+                    Python
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/ubuntu-xi-tong-wang-qia-pei-zhi-fu-xie/">
+                  <h3 class="post-title">
+                    Ubuntu系统网卡配置覆写
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

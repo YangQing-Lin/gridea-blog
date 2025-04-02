@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>正向代理、反向代理的异同点 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="对比表格
+
+
+
+特性
+正向代理
+反向代理
+相同点
+
+
+
+
+定义
+客户端通过正向代理服务器访问外部资源
+服务器通过反向代理服务器接收客户端请求
+两者都是代理服务器，用于转发请求和响应
+
+
+客户端感知
+客户端知道正向代理的存在
+客户端不知道反向..." />
+    <meta name="keywords" content="Nginx,计算机网络" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">正向代理、反向代理的异同点</h2>
+            <div class="post-date">2025-03-12</div>
+            
+              <div class="feature-container" style="background-image: url('https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202503121438630.png')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <h3 id="对比表格">对比表格</h3>
+<table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>正向代理</strong></th>
+<th><strong>反向代理</strong></th>
+<th><strong>相同点</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定义</strong></td>
+<td>客户端通过正向代理服务器访问外部资源</td>
+<td>服务器通过反向代理服务器接收客户端请求</td>
+<td>两者都是代理服务器，用于转发请求和响应</td>
+</tr>
+<tr>
+<td><strong>客户端感知</strong></td>
+<td>客户端知道正向代理的存在</td>
+<td>客户端不知道反向代理的存在</td>
+<td>两者都隐藏了真实服务器或客户端的身份</td>
+</tr>
+<tr>
+<td><strong>服务对象</strong></td>
+<td>为客户端提供服务</td>
+<td>为服务器提供服务</td>
+<td>两者都用于优化网络通信和安全性</td>
+</tr>
+<tr>
+<td><strong>典型应用</strong></td>
+<td>翻墙、访问受限资源</td>
+<td>负载均衡、缓存、SSL加速</td>
+<td>两者都可以用于提高访问速度和安全性</td>
+</tr>
+<tr>
+<td><strong>位置</strong></td>
+<td>位于客户端和互联网之间</td>
+<td>位于服务器和客户端之间</td>
+<td>两者都位于客户端和服务器之间的通信路径上</td>
+</tr>
+<tr>
+<td><strong>配置</strong></td>
+<td>客户端需要配置代理服务器</td>
+<td>服务器端配置反向代理</td>
+<td>两者都需要在特定位置进行配置</td>
+</tr>
+<tr>
+<td><strong>安全性</strong></td>
+<td>隐藏客户端的真实IP地址</td>
+<td>隐藏服务器的真实IP地址</td>
+<td>两者都提供了一定程度的安全性</td>
+</tr>
+<tr>
+<td><strong>访问控制</strong></td>
+<td>可以限制客户端访问特定资源</td>
+<td>可以限制客户端访问特定服务器资源</td>
+<td>两者都可以用于访问控制</td>
+</tr>
+<tr>
+<td><strong>缓存功能</strong></td>
+<td>可以缓存外部资源以加快访问速度</td>
+<td>可以缓存服务器资源以加快响应速度</td>
+<td>两者都可以使用缓存功能</td>
+</tr>
+</tbody>
+</table>
+<h3 id="总结">总结：</h3>
+<ul>
+<li><strong>正向代理</strong> 主要用于客户端访问外部资源，隐藏客户端的真实身份。<strong>（VPN、租房中介）</strong></li>
+<li><strong>反向代理</strong> 主要用于服务器接收客户端请求，隐藏服务器的真实身份。<strong>（二房东）</strong></li>
+<li>两者都用于优化网络通信、提高安全性和访问速度。</li>
+</ul>
+<p>1、<strong>正向代理其实是客户端的代理</strong>，帮助客户端访问其无法访问的服务器资源。<strong>反向代理则是服务器的代理</strong>，帮助服务器做负载均衡，安全防护等。</p>
+<p>2、<strong>正向代理一般是客户端架设的</strong>，比如在自己的机器上安装一个代理软件。而<strong>反向代理一般是服务器架设的</strong>，比如在自己的机器集群中部署一个反向代理服务器。</p>
+<p>3、<strong>正向代理中，服务器不知道真正的客户端到底是谁</strong>，以为访问自己的就是真实的客户端。而在<strong>反向代理中，客户端不知道真正的服务器是谁</strong>，以为自己访问的就是真实的服务器。</p>
+<p>4、正向代理和反向代理的作用和目的不同。<strong>正向代理主要是用来解决访问限制问题。而反向代理则是提供负载均衡、安全防护等作用。二者均能提高访问速度。</strong></p>
+<h3 id="参考资料">参考资料</h3>
+<p><a href="https://cloud.tencent.com/developer/article/1418457">终于有人把正向代理和反向代理解释的明明白白了！</a></p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/mF43Y88waE/" class="tag">
+                    Nginx
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/k69GlW8QegE/" class="tag">
+                    计算机网络
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/postgresql-ti-huan-zi-fu-chuan-gong-neng/">
+                  <h3 class="post-title">
+                    PostgreSQL 替换字符串功能
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

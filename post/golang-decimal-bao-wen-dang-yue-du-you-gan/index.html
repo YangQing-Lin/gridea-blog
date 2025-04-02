@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Golang Decimal 包文档阅读有感 | YangQing 的博客</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.aoip.top/favicon.ico?v=1743583245642">
+<link rel="stylesheet" href="https://blog.aoip.top/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="Golang Decimal 包文档阅读有感
+信息来源：在 Go 项目里，涉及到金额计算，大家一般用什么方式？ - V2EX
+官方文档：decimal - Go Playground
+今天看到一篇提问 Go 项目里一般用什么方式计算金钱的文..." />
+    <meta name="keywords" content="Golang,Decimal" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://blog.aoip.top">
+        <img src="https://blog.aoip.top/images/avatar.png?v=1743583245642" class="site-logo">
+        <h1 class="site-title">YangQing 的博客</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      温故而知新
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://blog.aoip.top/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">Golang Decimal 包文档阅读有感</h2>
+            <div class="post-date">2025-04-02</div>
+            
+              <div class="feature-container" style="background-image: url('https://picgo-yangqing.oss-cn-hangzhou.aliyuncs.com/wintoo/202504021637383.png')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="golang-decimal-包文档阅读有感">Golang Decimal 包文档阅读有感</h1>
+<p>信息来源：<a href="https://v2ex.com/t/1122800">在 Go 项目里，涉及到金额计算，大家一般用什么方式？ - V2EX</a></p>
+<p>官方文档：<a href="https://pkg.go.dev/github.com/shopspring/decimal#section-readme">decimal - Go Playground</a></p>
+<p>今天看到一篇提问 Go 项目里一般用什么方式计算金钱的文章，下面的回答中提到了他们生产环境使用的是<code>deciaml</code>包，于是跟随提供的地址阅读了对应的官方文档。</p>
+<p>惊奇于文档中几个例子设计之巧妙、代码之简洁、揭露问题之深刻，遂有感而发写下这篇文章，记录学到的知识。</p>
+<p>当然原来的文章里面也提出了其他的计算方案，比如直接以分为单位（辅币单位）来存储数据等，同样值得学习。</p>
+<h3 id="问题一为什么不直接使用-float64">问题一：为什么不直接使用 float64？</h3>
+<p>文档提供了如下代码作为例子：</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+
+func main() {
+	var n float64 = 0
+	for i := 0; i &lt; 1000; i++ {
+		n += .01
+	}
+	fmt.Println(n)
+}
+</code></pre>
+<p>运行后实际给出的结果是<code>9.999999999999831</code>，我当场用Python执行了一遍这个逻辑，得到了同样的结果。</p>
+<p>之前虽然知道二进制表示的小数会有误差，但一直不知道怎么写一个简单的例子来表示这种情况，现在终于学习到了。</p>
+<p>当然其实也有更简单的代码：</p>
+<pre><code class="language-python">print(0.1 + 0.2 == 0.3)  # False
+print(0.1 + 0.2)  # 0.30000000000000004
+</code></pre>
+<p>不过文档给出那个例子其实还有另一层考虑，也就是精度误差的积累效应，累加的越多，误差就越大。</p>
+<h3 id="问题二你为什么不用-bigrat">问题二：你为什么不用 big.Rat？</h3>
+<blockquote>
+<p><code>big.Rat</code> 是 Go 标准库 <code>math/big</code> 提供的<strong>高精度有理数</strong>类型，用于精确表示分数（如 <code>1/3</code>），避免浮点数的精度问题</p>
+</blockquote>
+<p>同样，文档也给出了一个简单的例子来解释为什么不用它：</p>
+<p>假设您使用 big.Rat，您有两个数字 x 和 y，都代表 1/3，您有 <code>z=1-x-y=1/3</code>。如果你把每个数字都打印出来，字符串输出必须在某个地方停止（为了简单起见，我们假设它在小数点后 3 位停止），所以你会得到 0.333、0.333 和 0.333。但另外的 0.001 去哪了？</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+import &quot;math/big&quot;
+
+func main() {
+	z, _ := new(big.Rat).SetString(&quot;1&quot;)
+	three, _ := new(big.Rat).SetString(&quot;3&quot;)
+	x := new(big.Rat).Quo(z, three)
+	y := new(big.Rat).Quo(z, three)
+
+	z = z.Sub(z, x)
+	z = z.Sub(z, y)
+	
+	s := new(big.Rat).Add(x, y)
+	s.Add(s, z)
+
+	fmt.Println(x.FloatString(3), &quot;+&quot;) // 0.333
+	fmt.Println(y.FloatString(3), &quot;+&quot;) // 0.333
+	fmt.Println(z.FloatString(3))      // 0.333
+	fmt.Println(&quot;=&quot;, s.FloatString(3)) // where did the other 0.001 go?
+}
+</code></pre>
+<p>使用十进制时，打印出的字符串将精确地表示数字。因此，如果您输入 <code>x = y = 1/3</code>（精度为 3），它们实际上将等于 0.333，而当您输入 <code>z = 1 - x - y</code> 时，<code>z</code> 将等于 .334。这样就不会有漏算！</p>
+<p>您仍然必须小心谨慎。如果您想将一个数字 <code>N</code> 分成三份，您就不能将 <code>N/3</code> 发送给三个不同的人。您必须选择一个发送 <code>N-（2/3*N）</code>。这个人将得到剩余的几分之一。</p>
+<p>最终要的就是下面这句：</p>
+<blockquote>
+<p>您必须选择一个发送 <code>N-（2/3*N）</code>。这个人将得到剩余的几分之一。</p>
+</blockquote>
+<p>如果我在阅读这份文档之前就接到使用高精度计算的开发需求，完全不会想到<code>剩余几分之一</code>这样的写法。</p>
+<h3 id="问题三为什么-api-与-bigint-的不相似">问题三：为什么 API 与 big.Int 的不相似？</h3>
+<p>其实这涉及到执行效率的问题，<code>big.Int</code>的应用程序接口旨在减少内存分配的次数，以获得最佳性能。</p>
+<p>但是这会造成使用上的困难，毕竟需要记忆更多的接口，而不是和往常一样使用数学运算符号来编写运算逻辑。</p>
+<p>如果接口使用错了，也会影响到最终的计算结果。</p>
+<p>Decimal 的行为与其他 Go 语言数值类型一致：虽然 a = b 这样的赋值不会对 b 进行深拷贝，但由于所有 Decimal 方法都会返回新的 Decimal 实例而不会修改原值，因此实际上不可能修改一个 Decimal 的值。这种机制的缺点在于会产生额外的内存分配，因此 Decimal 的性能相对较低。我的观点是，如果你选择使用 Decimal，那么相比性能而言，你可能更看重计算的准确性。</p>
+<p>所以，相对于编码难度、可阅读性以及最终结果的准确性来说，付出一点性能是完全值得的。</p>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://blog.aoip.top/tag/KxxbEFtQuS/" class="tag">
+                    Golang
+                  </a>
+                
+                  <a href="https://blog.aoip.top/tag/53LkvnsIBJT/" class="tag">
+                    Decimal
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://blog.aoip.top/post/guan-cha-zhe-mo-shi-yu-mqtt-xie-yi-ying-yong-jie-xi-dai-ma-shi-xian-ji-socketwebsocket-xie-yi-dui-bi/">
+                  <h3 class="post-title">
+                    观察者模式与 MQTT 协议应用解析：代码实现及 Socket、WebSocket 协议对比
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>
